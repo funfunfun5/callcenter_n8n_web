@@ -1,573 +1,412 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <base target="_top">
     <meta charset="UTF-8">
+    <title>รายละเอียดบิลค้างชำระ</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WEB APP - ข้อมูลลูกหนี้</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
-            min-height: 100vh;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            background: white;
-            min-height: 100vh;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-            padding: 20px 0;
-            border-bottom: 2px solid #e1e8ed;
-        }
-        
-        .header h1 {
-            color: #1976D2;
-            font-size: 2.5rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
-        
-        .form-section {
-            background: #fafbfc;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 30px;
-            border: 1px solid #e1e8ed;
-        }
-        
-        .form-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            margin-bottom: 20px;
-            align-items: center;
-        }
-        
-        .form-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-label {
-            font-weight: 600;
-            color: #2c3e50;
-            min-width: 80px;
-        }
-        
-        .form-control {
-            padding: 8px 12px;
-            border: 2px solid #bdc3c7;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s ease;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #3498db;
-        }
-        
-        .form-control select {
-            background: white;
-            cursor: pointer;
-        }
-        
-        .date-range {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .status-section {
-            text-align: center;
-            margin: 20px 0;
-        }
-        
-        .status-label {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-right: 15px;
-        }
-        
-        .report-date {
-            color: #e74c3c;
-            font-weight: bold;
-            font-size: 1.1rem;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
-        }
-        
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-        }
-        
-        .data-table thead {
-            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
-            color: white;
-        }
-        
-        .data-table th {
-            padding: 15px 10px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-            border-right: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .data-table th:last-child {
-            border-right: none;
-        }
-        
-        .data-table td {
-            padding: 12px 10px;
-            text-align: center;
-            border-bottom: 1px solid #ecf0f1;
-            vertical-align: middle;
-        }
-        
-        .data-table tbody tr:nth-child(even) {
-            background: #f8f9fa;
-        }
-        
-        .data-table tbody tr:hover {
-            background: #e3f2fd;
-            transition: background-color 0.3s ease;
-        }
-        
-        .checkbox-cell {
-            width: 50px;
-        }
-        
-        .checkbox-cell input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-        
-        .amount-positive {
-            color: #27ae60;
-            font-weight: 600;
-        }
-        
-        .amount-negative {
-            color: #e74c3c;
-            font-weight: 600;
-        }
-        
-        .summary-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: right;
-        }
-        
-        .summary-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #dee2e6;
-        }
-        
-        .summary-row:last-child {
-            border-bottom: none;
-            font-weight: bold;
-            font-size: 1.2rem;
-            color: #2c3e50;
-        }
-        
-        .summary-label {
-            font-weight: 600;
-        }
-        
-        .summary-value {
-            font-weight: 600;
-            color: #2c3e50;
-        }
-        
-        .btn {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            text-decoration: none;
-            display: inline-block;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-        }
-        
-        .btn-success:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
-        }
-        
-        .actions {
-            text-align: center;
-            margin-top: 30px;
-            gap: 15px;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            
-            .header h1 {
-                font-size: 1.8rem;
-            }
-            
-            .form-row {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            
-            .form-group {
-                flex-direction: column;
-                align-items: stretch;
-                gap: 5px;
-            }
-            
-            .form-label {
-                min-width: auto;
-            }
-            
-            .date-range {
-                flex-direction: column;
-                gap: 10px;
-            }
-            
-            .data-table {
-                font-size: 12px;
-            }
-            
-            .data-table th,
-            .data-table td {
-                padding: 8px 5px;
-            }
-            
-            .actions {
-                flex-direction: column;
-            }
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .loading-spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #1976D2;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        body {background: #fff;font-family: Arial,sans-serif;color: #222;margin: 0;padding: 0;}
+        h1 { color: #0073ea;text-align: center;font-weight: bold;letter-spacing: 1px;margin: 32px 0 18px 0;font-size: 2em;}
+        .main-container { max-width: 900px; background: #fff; margin: auto;}
+        .form-top-row { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px; margin-bottom: 16px; font-size: 1.1em;}
+        .form-top-row label { margin-right: 3px; font-weight: 500; }
+        .form-top-row select, .form-top-row input[type="date"] {min-width: 110px;padding: 9px 12px;border-radius:8px; border:1px solid #bbb; outline:none; font-size:1em;}
+        .dates-row { display: flex; justify-content: center; align-items: center; gap: 9px; margin-bottom: 18px;}
+        .dates-row label { font-weight: 500; }
+        .status-row {display: flex; justify-content: center; align-items: center; margin-bottom: 10px;}
+        .status-row label {margin-right:6px; font-weight:500;}
+        .status-row select {padding: 7px 14px; border-radius: 7px; border: 1px solid #bbb; font-size:1em; min-width:120px;}
+        .det-row {text-align:center; margin:10px 0 14px 0;font-size:1.13em;font-weight:500;}
+        .det-row strong {font-size:1.17em;color:#222;letter-spacing:1px;}
+        .table-wrap {overflow-x:auto; margin-bottom:20px;}
+        .custom-table {width:100%; border-collapse:collapse; box-shadow:0 2px 8px #eee; font-size: 1em; min-width: 690px;}
+        .custom-table th {background:#0086ff;color:#fff;font-weight:bold;text-align:center;padding:12px 4px;border-bottom:3px solid #fff;}
+        .custom-table td {text-align:center;padding:10px 4px;border-bottom:1px solid #e5e5e5;}
+        .custom-table td input[type="checkbox"] {transform:scale(1.1);}
+        .custom-table tr:last-child td {border-bottom:none;}
+        .total-row {background:#eaf5ff;font-weight:bold;}
+        .total-row td {font-size:1.2em;padding:15px 8px;text-align:right;}
+        .total-label {text-align:left !important;}
+        .centered-btn {width:97%;margin:auto;display:flex;justify-content:center;align-items:center;margin-bottom:24px;}
+        .btn-gen {padding:13px 32px;background:#0073ea;color:#fff;border:none;border-radius:8px;font-size:1.1em;cursor:pointer;margin:14px 8px;font-weight:500;}
+        .btn-gen:hover {background:#005dc0;}
+        .img-area {display:flex;flex-direction:column;align-items:center;gap:40px;margin-top:15px;margin-bottom:35px;}
+        .qr-img {margin-bottom:40px;}
+        .barcode-img {margin-top:22px;margin-bottom:10px;}
+        .debug-info {background: #f8f9fa;padding: 15px;border-radius: 8px;margin: 20px 0;font-family: monospace;font-size: 12px;border: 1px solid #dee2e6;}
+        .loading {display: none;text-align: center;padding: 40px;}
+        .loading-spinner {border: 4px solid #f3f3f3;border-top: 4px solid #0073ea;border-radius: 50%;width: 50px;height: 50px;animation: spin 1s linear infinite;margin: 0 auto 20px;}
+        @keyframes spin {0% { transform: rotate(0deg); }100% { transform: rotate(360deg); }}
+        /* Responsive */
+        @media (max-width: 640px) {
+            .main-container {max-width: 100vw; padding: 0 2vw;}
+            .form-top-row, .dates-row, .status-row {font-size: 0.99em; gap: 5px;}
+            h1 { font-size: 1.18em;}
+            .det-row { font-size: 0.99em;}
+            .custom-table, .custom-table th, .custom-table td {font-size:0.91em;min-width:85px;}
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>WEB APP</h1>
-        </div>
-        
-        <div class="form-section">
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">บริษัท:</label>
-                    <select class="form-control" id="company">
-                        <option value="333">333</option>
-                        <option value="555">555</option>
-                        <option value="777">777</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">CV:</label>
-                    <select class="form-control" id="cv">
-                        <option value="2000166049">2000166049</option>
-                        <option value="2000166050">2000166050</option>
-                        <option value="2000166051">2000166051</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">ชื่อบัญชี:</label>
-                    <span class="form-control" style="border: none; background: transparent; font-weight: 600;">ธนณ สมาเอกรัณ</span>
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">วันที่เริ่ม:</label>
-                    <input type="date" class="form-control" id="startDate" value="2017-12-11">
-                </div>
-                
-                <div class="date-range">
-                    <span>ถึง</span>
-                    <input type="date" class="form-control" id="endDate" value="2025-09-09">
-                </div>
-            </div>
-            
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">สถานะขันตรมหานก:</label>
-                    <select class="form-control" id="status">
-                        <option value="เก็บกำหนด">เก็บกำหนด</option>
-                        <option value="ค้างชำระ">ค้างชำระ</option>
-                        <option value="ชำระแล้ว">ชำระแล้ว</option>
-                    </select>
-                </div>
+<div class="main-container">
+    <h1>WEB APP</h1>
+    
+    <div class="loading" id="loadingDiv">
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลดข้อมูล...</p>
+    </div>
+    
+    <div class="debug-info" id="debugInfo" style="display: none;">
+        <strong>Debug Info:</strong><br>
+        <div id="debugContent"></div>
+    </div>
+    
+    <div id="mainContent" style="display: none;">
+        <div class="form-top-row">
+            <label for="company">บริษัท:</label>
+            <select id="company"></select>
+            <label for="cv">CV:</label>
+            <select id="cv"></select>
+            <label>ชื่อบัญชี:</label>
+            <span id="account-label" style="font-weight:bold;padding-left:10px"></span>
+
+            <div class="dates-row">
+                <label for="start-date">วันที่เริ่ม:</label>
+                <input type="date" id="start-date">
+                <label for="end-date">ถึง</label>
+                <input type="date" id="end-date">
             </div>
         </div>
-        
-        <div class="status-section">
-            <span class="status-label">รายละเอียดบิล : วันที่</span>
-            <span class="report-date" id="reportDate">11/9/2025</span>
+        <div class="status-row">
+            <label for="duedate-status">สถานะวันครบกำหนด:</label>
+            <select id="duedate-status">
+                <option value="all">ทั้งหมด</option>
+                <option value="in">ภายในกำหนด</option>
+                <option value="over">เกินกำหนด</option>
+            </select>
         </div>
-        
-        <div class="loading" id="loadingDiv">
-            <div class="loading-spinner"></div>
-            <p>กำลังโหลดข้อมูล...</p>
+        <div class="det-row" id="bill-detail">
+            รายละเอียดบิล : วันที่ <strong id="current-date"></strong>
         </div>
-        
-        <div class="table-container" id="tableContainer">
-            <table class="data-table">
+        <div class="table-wrap">
+            <table class="custom-table" id="inv-table">
                 <thead>
-                    <tr>
-                        <th class="checkbox-cell">☐</th>
-                        <th>วันที่</th>
-                        <th>ประเภทเอกสาร</th>
-                        <th>เลขที่บิล</th>
-                        <th>วันครบกำหนด</th>
-                        <th>จำนวนเงิน</th>
-                    </tr>
+                <tr>
+                    <th><input type="checkbox" id="check-all"></th>
+                    <th>วันที่</th>
+                    <th>ประเภทเอกสาร</th>
+                    <th>เลขที่บิล</th>
+                    <th>วันครบกำหนด</th>
+                    <th>จำนวนเงิน</th>
+                </tr>
                 </thead>
-                <tbody id="dataTableBody">
-                    <!-- ข้อมูลจะแสดงที่นี่ -->
-                </tbody>
+                <tbody id="tb-body"></tbody>
+                <tfoot>
+                <tr class="total-row">
+                    <td colspan="5" class="total-label">รวม:</td>
+                    <td id="total-amount">0</td>
+                </tr>
+                </tfoot>
             </table>
         </div>
-        
-        <div class="summary-section">
-            <div class="summary-row">
-                <span class="summary-label">รวม:</span>
-                <span class="summary-value" id="totalAmount">0</span>
-            </div>
+        <div class="centered-btn">
+            <button class="btn-gen" id="gen-btn">Generate เพื่อชำระเงิน</button>
         </div>
-        
-        <div class="actions">
-            <button class="btn btn-primary" onclick="refreshData()">🔄 รีเฟรชข้อมูล</button>
-            <button class="btn btn-success" onclick="exportData()">📊 ส่งออกข้อมูล</button>
+        <div class="img-area">
+            <div id="qr-area" class="qr-img"></div>
+            <div id="barcode-area" class="barcode-img"></div>
         </div>
     </div>
+</div>
 
-    <script>
-        // ข้อมูลตัวอย่าง (จะมาจาก n8n workflow จริง)
-        let currentData = [
-            {
-                date: '30/8/2025',
-                docType: 'ZY',
-                billNumber: '9800978976',
-                dueDate: '2/9/2025',
-                amount: -251833
-            },
-            {
-                date: '30/8/2025',
-                docType: 'CC',
-                billNumber: '5310060553',
-                dueDate: '30/8/2025',
-                amount: -33000
-            },
-            {
-                date: '18/8/2025',
-                docType: 'CI',
-                billNumber: '5700656297',
-                dueDate: '2/9/2025',
-                amount: 256553
+<script>
+    let allInvoicesData;
+
+    function populateDropdown(list, elementId) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        let uniqueList = Array.from(new Set(list));
+        el.innerHTML = uniqueList.filter(x => x && x.trim() !== '').map(x => `<option value="${x}">${x}</option>`).join('');
+        if (el.options.length > 0) el.value = el.options[0].value;
+    }
+
+    function formatDate(dstr) {
+        if (!dstr) return '-';
+        let d = new Date(dstr);
+        if (isNaN(d.getTime())) return dstr;
+        return (d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear());
+    }
+
+    function todayStr() {
+        let t = new Date();
+        return t.toISOString().substr(0,10);
+    }
+
+    function displayCurrentDate() {
+        let t = new Date();
+        const el = document.getElementById("current-date");
+        if (el) el.innerText = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
+    }
+
+    function updateAccountDropdown() {
+        const company = document.getElementById('company').value;
+        const cv = document.getElementById('cv').value;
+        
+        const invoice = allInvoicesData.invoices.find(inv =>
+            inv.company == company && inv.cv == cv
+        );
+
+        let accountName = '-';
+        if (invoice && invoice.name) accountName = invoice.name;
+
+        document.getElementById('account-label').innerText = accountName;
+        renderTable();
+    }
+
+    function renderTable() {
+        let tbody = document.getElementById("tb-body");
+        if (!tbody || !allInvoicesData || !allInvoicesData.invoices || allInvoicesData.invoices.length === 0) {
+            if (tbody) tbody.innerHTML = "<tr><td colspan='6'>ไม่มีข้อมูลที่ตรงกับเงื่อนไข</td></tr>";
+            return;
+        }
+
+        let start = document.getElementById('start-date').value;
+        let end = document.getElementById('end-date').value;
+        let status = document.getElementById('duedate-status').value;
+        let companyValue = document.getElementById('company').value;
+        let cvValue = document.getElementById('cv').value;
+        let accountValue = document.getElementById('account-label').innerText.trim();
+        if (accountValue === '-' || !accountValue) accountValue = '';
+
+        let filtered = allInvoicesData.invoices.filter(inv=>{
+            let dateOk = true, statusOk = true, companyOk = true, cvOk = true, accountOk = true;
+
+            if (start) dateOk = inv.date && (inv.date >= start);
+            if (end)   dateOk = dateOk && inv.date && (inv.date <= end);
+            
+            let today = new Date();
+            today.setHours(0,0,0,0);
+            let invDue = inv.due ? new Date(inv.due) : null;
+            
+            if (status==="in") {
+                statusOk = invDue && (invDue >= today);
+            } else if (status==="over") {
+                statusOk = invDue && (invDue < today);
             }
-        ];
+            
+            if (companyValue) companyOk = (inv.company == companyValue);
+            if (cvValue) cvOk = (inv.cv == cvValue);
+            if (accountValue) accountOk = (inv.name == accountValue);
+            
+            return dateOk && statusOk && companyOk && cvOk && accountOk;
+        });
 
-        function formatNumber(num) {
-            return new Intl.NumberFormat('th-TH').format(Math.abs(num));
+        let html = "";
+        filtered.forEach(inv => {
+            html += `<tr>
+                <td><input type="checkbox" class="check-item"></td>
+                <td>${formatDate(inv.date)}</td>
+                <td>${inv.docType || '-'}</td>
+                <td>${inv.number || '-'}</td>
+                <td>${formatDate(inv.due)}</td>
+                <td>${(inv.amount || 0).toLocaleString()}</td>
+            </tr>`;
+        });
+        
+        tbody.innerHTML = html;
+        bindCheckboxListeners();
+        calculateTotal();
+    }
+
+    function bindCheckboxListeners() {
+        var items = document.querySelectorAll('.check-item');
+        if (items.length === 0) return;
+        for(let i=0;i<items.length;i++){
+            items[i].addEventListener('change', calculateTotal);
+            items[i].checked = false;
         }
+        document.getElementById('check-all').checked = false;
+        document.getElementById('check-all').addEventListener('change',function(){
+            var state = this.checked;
+            items.forEach(cb=>cb.checked=state);
+            calculateTotal();
+        });
+    }
 
-        function formatAmount(amount) {
-            const formatted = formatNumber(amount);
-            return amount < 0 ? `-${formatted}` : formatted;
-        }
-
-        function renderTable(data) {
-            const tableBody = document.getElementById('dataTableBody');
-            tableBody.innerHTML = '';
-            
-            let total = 0;
-            
-            data.forEach((item, index) => {
-                total += item.amount;
-                
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td class="checkbox-cell">
-                        <input type="checkbox" id="row${index}" onchange="updateTotal()">
-                    </td>
-                    <td>${item.date}</td>
-                    <td>${item.docType}</td>
-                    <td>${item.billNumber}</td>
-                    <td>${item.dueDate}</td>
-                    <td class="${item.amount >= 0 ? 'amount-positive' : 'amount-negative'}">
-                        ${formatAmount(item.amount)}
-                    </td>
-                `;
-                
-                tableBody.appendChild(row);
-            });
-            
-            document.getElementById('totalAmount').textContent = formatAmount(total);
-        }
-
-        function updateTotal() {
-            const checkboxes = document.querySelectorAll('#dataTableBody input[type="checkbox"]');
-            let selectedTotal = 0;
-            
-            checkboxes.forEach((checkbox, index) => {
-                if (checkbox.checked) {
-                    selectedTotal += currentData[index].amount;
+    function calculateTotal() {
+        var items = document.querySelectorAll('.check-item');
+        var total = 0;
+        items.forEach(function(cb) {
+            if(cb.checked){
+                var row = cb.closest('tr');
+                if (row && row.cells && row.cells.length > 5) {
+                    var amtStr = row.cells[5].innerText.replace(/,/g,"");
+                    var amt = parseFloat(amtStr);
+                    if (!isNaN(amt)) {
+                        total += amt;
+                    }
                 }
-            });
-            
-            if (selectedTotal === 0) {
-                // แสดงยอดรวมทั้งหมดถ้าไม่มีการเลือก
-                const total = currentData.reduce((sum, item) => sum + item.amount, 0);
-                document.getElementById('totalAmount').textContent = formatAmount(total);
-            } else {
-                document.getElementById('totalAmount').textContent = formatAmount(selectedTotal);
             }
-        }
+        });
+        document.getElementById('total-amount').innerText = total.toLocaleString();
+    }
 
-        function refreshData() {
-            const loadingDiv = document.getElementById('loadingDiv');
-            const tableContainer = document.getElementById('tableContainer');
+    function getSelectedQRData() {
+        const company = document.getElementById('company').value;
+        const cv = document.getElementById('cv').value;
+        const name = document.getElementById('account-label').innerText;
+        const amount = document.getElementById('total-amount').innerText.replace(/,/g, '');
+
+        const data = {
+            company: company,
+            cv: cv,
+            name: name,
+            amount: amount
+        };
+
+        console.log('QR Data:', data);
+        return data;
+    }
+
+    function generateQRBarcode() {
+        const qrdata = getSelectedQRData();
+        
+        // สำหรับ n8n เราจะใช้ external service สร้าง QR แทน
+        const qrText = `Company: ${qrdata.company}, CV: ${qrdata.cv}, Name: ${qrdata.name}, Amount: ${qrdata.amount}`;
+        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrText) + "&size=200x200";
+        
+        document.getElementById('qr-area').innerHTML = 
+            '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:3px;">' +
+            qrdata.company + '<br>' + qrdata.name +
+            '</div>' +
+            '<img src="' + qrUrl + '" width="120" height="120" style="display:block;margin:auto;">' +
+            '<div style="text-align:center; font-weight:bold; color:#222; margin-top:3px;">จำนวนเงิน ' + Number(qrdata.amount).toLocaleString() + ' บาท</div>';
+
+        // สร้าง Barcode ง่ายๆ
+        const barcodeText = `${qrdata.cv}|${qrdata.amount}`;
+        const barcodeUrl = "https://bwipjs-api.metafloor.com/?bcid=code128&text=" + encodeURIComponent(barcodeText) + "&includetext&scale=1.4&height=12";
+        
+        document.getElementById('barcode-area').innerHTML =
+            '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:2px; margin-top:-16px;">' +
+            'Barcode สำหรับชำระเงิน' +
+            '</div>' +
+            '<img src="' + barcodeUrl + '" alt="barcode" style="display:block;margin:auto;">' +
+            '<div style="text-align:center;color:#666;font-size:0.8em;margin-top:2px;">' +
+            barcodeText +
+            '</div>';
+    }
+
+    function showDebugInfo(data) {
+        const debugDiv = document.getElementById('debugInfo');
+        const debugContent = document.getElementById('debugContent');
+        
+        debugContent.innerHTML = `
+            URL: ${window.location.href}<br>
+            Data found: ${data ? 'Yes' : 'No'}<br>
+            Invoices: ${data?.invoices?.length || 0}<br>
+            Companies: ${data?.companies?.length || 0}<br>
+            CVs: ${data?.cvs?.length || 0}<br>
+            Names: ${data?.names?.length || 0}
+        `;
+        
+        // แสดง debug info ชั่วคราว
+        debugDiv.style.display = 'block';
+        setTimeout(() => {
+            debugDiv.style.display = 'none';
+        }, 5000);
+    }
+
+    function initializeData(data) {
+        try {
+            console.log('Initializing with data:', data);
+            allInvoicesData = data;
             
-            loadingDiv.style.display = 'block';
-            tableContainer.style.opacity = '0.5';
-            
-            // จำลองการโหลดข้อมูลใหม่
-            setTimeout(() => {
-                renderTable(currentData);
-                loadingDiv.style.display = 'none';
-                tableContainer.style.opacity = '1';
+            populateDropdown(allInvoicesData.companies, 'company');
+            populateDropdown(allInvoicesData.cvs, 'cv');
+
+            updateAccountDropdown();
+
+            // ตั้งค่าวันที่เริ่มต้นและสิ้นสุด
+            let validDates = allInvoicesData.invoices.filter(inv => inv.date && inv.date !== "1970-01-01");
+            if (validDates.length > 0) {
+                let minDate = validDates.reduce((min, inv) => inv.date < min ? inv.date : min, validDates[0].date);
+                let maxDate = validDates.reduce((max, inv) => inv.date > max ? inv.date : max, validDates[0].date);
                 
-                // อัพเดทวันที่รายงาน
-                const now = new Date();
-                document.getElementById('reportDate').textContent = 
-                    now.toLocaleDateString('th-TH');
-            }, 1500);
-        }
+                const startDateEl = document.getElementById('start-date');
+                if (startDateEl) startDateEl.value = minDate;
+                const endDateEl = document.getElementById('end-date');
+                if (endDateEl) endDateEl.value = maxDate;
+            }
 
-        function exportData() {
-            // ฟังก์ชันส่งออกข้อมูล
-            const csvContent = "data:text/csv;charset=utf-8," + 
-                "วันที่,ประเภทเอกสาร,เลขที่บิล,วันครบกำหนด,จำนวนเงิน\n" +
-                currentData.map(row => 
-                    `${row.date},${row.docType},${row.billNumber},${row.dueDate},${row.amount}`
-                ).join("\n");
+            // Bind event listeners
+            const startDateEl = document.getElementById('start-date');
+            if (startDateEl) startDateEl.addEventListener('change', renderTable);
+            const endDateEl = document.getElementById('end-date');
+            if (endDateEl) endDateEl.addEventListener('change', renderTable);
+            const duedateStatusEl = document.getElementById('duedate-status');
+            if (duedateStatusEl) duedateStatusEl.addEventListener('change', renderTable);
+            const genBtnEl = document.getElementById('gen-btn');
+            if (genBtnEl) genBtnEl.addEventListener('click', generateQRBarcode);
+            const companyEl = document.getElementById('company');
+            if (companyEl) companyEl.addEventListener('change', updateAccountDropdown);
+            const cvEl = document.getElementById('cv');
+            if (cvEl) cvEl.addEventListener('change', updateAccountDropdown);
+
+            displayCurrentDate();
+            renderTable();
+
+            // แสดง main content และซ่อน loading
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'block';
+
+        } catch (e) {
+            console.error("Error initializing data:", e);
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.body.innerHTML = "<h1>เกิดข้อผิดพลาดในการโหลดข้อมูล</h1><p>ไม่สามารถโหลดข้อมูลได้: " + e.message + "</p>";
+        }
+    }
+
+    function loadDataFromURL() {
+        console.log('=== Loading data from URL ===');
+        console.log('Current URL:', window.location.href);
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const dataParam = urlParams.get('data');
+        
+        console.log('Data parameter found:', dataParam ? 'Yes' : 'No');
+        
+        if (dataParam) {
+            try {
+                const data = JSON.parse(decodeURIComponent(dataParam));
+                console.log('Parsed data:', data);
                 
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement("a");
-            link.setAttribute("href", encodedUri);
-            link.setAttribute("download", `ลูกหนี้_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        }
-
-        // ฟังก์ชันสำหรับรับข้อมูลจาก URL parameters
-        function loadDataFromURL() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const dataParam = urlParams.get('data');
-            
-            if (dataParam) {
-                try {
-                    const decodedData = JSON.parse(decodeURIComponent(dataParam));
-                    currentData = decodedData;
-                    renderTable(currentData);
+                showDebugInfo(data);
+                
+                if (data.invoices && Array.isArray(data.invoices)) {
+                    initializeData(data);
                     return;
-                } catch (e) {
-                    console.error('Error parsing data from URL:', e);
+                } else {
+                    console.error('No valid invoices array found in data');
                 }
+            } catch (e) {
+                console.error('Error parsing URL data:', e);
+                showDebugInfo(null);
             }
-            
-            // ใช้ข้อมูลตัวอย่างถ้าไม่มีข้อมูลจาก URL
-            renderTable(currentData);
+        } else {
+            console.log('No data parameter in URL');
         }
+        
+        // แสดงข้อความไม่มีข้อมูล
+        document.getElementById('loadingDiv').style.display = 'none';
+        document.body.innerHTML = "<div class='main-container'><h1>WEB APP</h1><p style='text-align:center;margin-top:50px;'>ไม่พบข้อมูล กรุณาเข้าถึงผ่าน LINE Bot</p></div>";
+    }
 
-        // โหลดข้อมูลเริ่มต้น
-        window.addEventListener('load', () => {
-            loadDataFromURL();
-        });
-
-        // Event listeners สำหรับ form controls
-        document.addEventListener('DOMContentLoaded', function() {
-            const formControls = ['company', 'cv', 'startDate', 'endDate', 'status'];
-            
-            formControls.forEach(id => {
-                const element = document.getElementById(id);
-                if (element) {
-                    element.addEventListener('change', function() {
-                        // จำลองการกรองข้อมูลตามการเลือก
-                        refreshData();
-                    });
-                }
-            });
-        });
-    </script>
+    // โหลดข้อมูลเมื่อหน้าเว็บพร้อม
+    window.addEventListener('load', () => {
+        console.log('Page loaded');
+        loadDataFromURL();
+    });
+</script>
 </body>
 </html>

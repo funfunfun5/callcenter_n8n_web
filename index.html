@@ -272,20 +272,26 @@
     function generateQRBarcode() {
         const qrdata = getSelectedQRData();
         
-        // สำหรับ n8n เราจะใช้ external service สร้าง QR แทน
-        const qrText = `Company: ${qrdata.company}, CV: ${qrdata.cv}, Name: ${qrdata.name}, Amount: ${qrdata.amount}`;
-        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrText) + "&size=200x200";
+        // ข้อมูลสำหรับสร้าง QR และ Barcode (ต้องดึงจาก master sheet จริง)
+        // สำหรับตอนนี้ใช้ข้อมูล hardcode ก่อน
+        const taxid = getMasterData(qrdata.company, qrdata.cv);
+        
+        // สร้าง PromptPay QR
+        const amount = parseFloat(qrdata.amount).toFixed(2);
+        const qrString = generatePromptPayString(taxid.taxid + "88", amount, qrdata.cv, taxid.ref2, qrdata.name);
+        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrString) + "&size=200x200";
         
         document.getElementById('qr-area').innerHTML = 
             '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:3px;">' +
-            qrdata.company + '<br>' + qrdata.name +
+            (taxid.companyName || qrdata.company) + '<br>' + qrdata.name +
             '</div>' +
             '<img src="' + qrUrl + '" width="120" height="120" style="display:block;margin:auto;">' +
             '<div style="text-align:center; font-weight:bold; color:#222; margin-top:3px;">จำนวนเงิน ' + Number(qrdata.amount).toLocaleString() + ' บาท</div>';
 
-        // สร้าง Barcode ง่ายๆ
-        const barcodeText = `${qrdata.cv}|${qrdata.amount}`;
-        const barcodeUrl = "https://bwipjs-api.metafloor.com/?bcid=code128&text=" + encodeURIComponent(barcodeText) + "&includetext&scale=1.4&height=12";
+        // สร้าง Barcode
+        const CR = String.fromCharCode(13);
+        const barcodeString = "|" + taxid.taxid + taxid.suffix + CR + qrdata.cv + CR + taxid.ref2 + CR + "0";
+        const barcodeUrl = "https://bwipjs-api.metafloor.com/?bcid=code128&text=" + encodeURIComponent(barcodeString) + "&includetext&scale=1.4&height=12";
         
         document.getElementById('barcode-area').innerHTML =
             '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:2px; margin-top:-16px;">' +
@@ -293,8 +299,125 @@
             '</div>' +
             '<img src="' + barcodeUrl + '" alt="barcode" style="display:block;margin:auto;">' +
             '<div style="text-align:center;color:#666;font-size:0.8em;margin-top:2px;">' +
-            barcodeText +
+            barcodeString.replace(/\r/g, '<span style="color:red;font-weight:bold">⏎</span>') +
             '</div>';
+    }
+
+    // ฟังก์ชันดึงข้อมูล master (ในอนาคตอาจดึงจาก API)
+    function getMasterData(company, cv) {
+        // ข้อมูล master แบบ hardcode สำหรับทดสอบ
+        // ในอนาคตควรดึงจาก Google Sheets master หรือส่งมาจาก n8n
+        const masterData = {
+            "119": {
+                "2000000086": {
+                    taxid: "1234567890123",
+                    suffix: "88",
+                    ref2: "REF2001",
+                    companyName: "บริษัท ทดสอบ จำกัด",
+                    serviceCode: "001"
+                },
+                "2000001791": {
+                    taxid: "9876543210987", 
+                    suffix: "88",
+                    ref2: "REF2002",
+                    companyName: "บริษัท ทดสอบ 2 จำกัด",
+                    serviceCode: "002"
+                }
+            }
+        };
+        
+        // ค้นหาข้อมูลที่ตรงกัน
+        if (masterData[company] && masterData[company][cv]) {
+            return masterData[company][cv];
+        }
+        
+        // ถ้าไม่เจอให้ใช้ค่าเริ่มต้น
+        return {
+            taxid: "1234567890123",
+            suffix: "88", 
+            ref2: "DEFAULT",
+            companyName: "บริษัท เริ่มต้น จำกัด",
+            serviceCode: "000"
+        };
+    }
+
+    // ฟังก์ชันสร้าง PromptPay QR String
+    function generatePromptPayString(billerId, amount, ref1, ref2, merchantName) {
+        // ฟังก์ชันสร้าง TLV
+        function formatTLV(id, value) {
+            const length = String(value).length;
+            const paddedLength = length < 10 ? '0' + length : String(length);
+            return id + paddedLength + value;
+        }
+
+        // ฟังก์ชันคำนวณ CRC16
+        function calculateCRC(input) {
+            let crc = 0xFFFF;
+            let bytes = [];
+            
+            // Encode string to UTF-8
+            for (let i = 0; i < input.length; i++) {
+                let c = input.charCodeAt(i);
+                if (c < 128) {
+                    bytes.push(c);
+                } else if (c < 2048) {
+                    bytes.push((c >> 6) | 192);
+                    bytes.push((c & 63) | 128);
+                } else if (((c & 0xFC00) === 0xD800) && (i+1) < input.length && ((input.charCodeAt(i+1) & 0xFC00) === 0xDC00)) {
+                    // Surrogate pair
+                    c = 0x10000 + ((c & 0x3FF) << 10) + (input.charCodeAt(++i) & 0x3FF);
+                    bytes.push((c >> 18) | 240);
+                    bytes.push(((c >> 12) & 63) | 128);
+                    bytes.push(((c >> 6) & 63) | 128);
+                    bytes.push((c & 63) | 128);
+                } else {
+                    bytes.push((c >> 12) | 224);
+                    bytes.push(((c >> 6) & 63) | 128);
+                    bytes.push((c & 63) | 128);
+                }
+            }
+
+            for (let b of bytes) {
+                crc ^= (b << 8);
+                for (let i = 0; i < 8; i++) {
+                    crc = (crc & 0x8000) !== 0 ? ((crc << 1) ^ 0x1021) : (crc << 1);
+                }
+                crc &= 0xFFFF;
+            }
+            return crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        // สร้าง QR String สำหรับ Bill Payment
+        const payloadFormatIndicator = "000201";
+        const pointOfInitiationMethod = "010212";
+        const app_id = "A000000677010112";
+        
+        const aid = formatTLV("00", app_id);
+        const billerIdTLV = formatTLV("01", billerId);
+        const ref1TLV = formatTLV("02", ref1);
+        const ref2TLV = formatTLV("03", ref2);
+        
+        const merchantIdData = aid + billerIdTLV + ref1TLV + ref2TLV;
+        const merchantIdentifier = formatTLV("30", merchantIdData);
+        
+        const transactionCurrency = formatTLV("53", "764"); // THB
+        const transactionAmount = formatTLV("54", amount);
+        const countryCode = formatTLV("58", "TH");
+        const merchantNameTLV = formatTLV("59", merchantName || "Bill Payment");
+
+        let qrStringWithoutCRC = (
+            payloadFormatIndicator +
+            pointOfInitiationMethod +
+            merchantIdentifier +
+            transactionCurrency +
+            transactionAmount +
+            countryCode +
+            merchantNameTLV +
+            "6304" // CRC field placeholder
+        );
+
+        const crc = calculateCRC(qrStringWithoutCRC);
+        return qrStringWithoutCRC + crc;
     }
 
     function showDebugInfo(data) {

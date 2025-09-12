@@ -37,6 +37,8 @@
         .debug-info {background: #f8f9fa;padding: 15px;border-radius: 8px;margin: 20px 0;font-family: monospace;font-size: 12px;border: 1px solid #dee2e6;}
         .loading {display: none;text-align: center;padding: 40px;}
         .loading-spinner {border: 4px solid #f3f3f3;border-top: 4px solid #0073ea;border-radius: 50%;width: 50px;height: 50px;animation: spin 1s linear infinite;margin: 0 auto 20px;}
+        .error-message {background: #f8d7da;color: #721c24;padding: 15px;border-radius: 8px;margin: 20px 0;border: 1px solid #f5c6cb;}
+        .success-message {background: #d4edda;color: #155724;padding: 15px;border-radius: 8px;margin: 20px 0;border: 1px solid #c3e6cb;}
         @keyframes spin {0% { transform: rotate(0deg); }100% { transform: rotate(360deg); }}
         /* Responsive */
         @media (max-width: 640px) {
@@ -50,7 +52,7 @@
 </head>
 <body>
 <div class="main-container">
-    <h1>WEB APP</h1>
+    <h1>WEB APP - Thai QR Payment System</h1>
     
     <div class="loading" id="loadingDiv">
         <div class="loading-spinner"></div>
@@ -111,8 +113,11 @@
             </table>
         </div>
         <div class="centered-btn">
-            <button class="btn-gen" id="gen-btn">Generate เพื่อชำระเงิน</button>
+            <button class="btn-gen" id="gen-btn">Generate Thai QR & Barcode เพื่อชำระเงิน</button>
         </div>
+        
+        <div id="message-area"></div>
+        
         <div class="img-area">
             <div id="qr-area" class="qr-img"></div>
             <div id="barcode-area" class="barcode-img"></div>
@@ -122,6 +127,7 @@
 
 <script>
     let allInvoicesData;
+    let n8nBaseUrl = ''; // จะได้จาก URL parameter
 
     function populateDropdown(list, elementId) {
         const el = document.getElementById(elementId);
@@ -147,6 +153,17 @@
         let t = new Date();
         const el = document.getElementById("current-date");
         if (el) el.innerText = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
+    }
+
+    function showMessage(message, type = 'success') {
+        const messageArea = document.getElementById('message-area');
+        const className = type === 'error' ? 'error-message' : 'success-message';
+        messageArea.innerHTML = `<div class="${className}">${message}</div>`;
+        
+        // Auto hide after 5 seconds
+        setTimeout(() => {
+            messageArea.innerHTML = '';
+        }, 5000);
     }
 
     function updateAccountDropdown() {
@@ -269,32 +286,115 @@
         return data;
     }
 
-    function generateQRBarcode() {
+    // ฟังก์ชันสำหรับเรียกใช้ n8n API เพื่อสร้าง Thai QR และ Barcode
+    async function generateThaiQRBarcode() {
         const qrdata = getSelectedQRData();
         
-        // สำหรับ n8n เราจะใช้ external service สร้าง QR แทน
-        const qrText = `Company: ${qrdata.company}, CV: ${qrdata.cv}, Name: ${qrdata.name}, Amount: ${qrdata.amount}`;
-        const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrText) + "&size=200x200";
-        
-        document.getElementById('qr-area').innerHTML = 
-            '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:3px;">' +
-            qrdata.company + '<br>' + qrdata.name +
-            '</div>' +
-            '<img src="' + qrUrl + '" width="120" height="120" style="display:block;margin:auto;">' +
-            '<div style="text-align:center; font-weight:bold; color:#222; margin-top:3px;">จำนวนเงิน ' + Number(qrdata.amount).toLocaleString() + ' บาท</div>';
+        // ตรวจสอบข้อมูล
+        if (!qrdata.amount || parseFloat(qrdata.amount) <= 0) {
+            showMessage('กรุณาเลือกรายการที่ต้องการชำระเงิน', 'error');
+            return;
+        }
 
-        // สร้าง Barcode ง่ายๆ
-        const barcodeText = `${qrdata.cv}|${qrdata.amount}`;
-        const barcodeUrl = "https://bwipjs-api.metafloor.com/?bcid=code128&text=" + encodeURIComponent(barcodeText) + "&includetext&scale=1.4&height=12";
+        // แสดง loading
+        const genBtn = document.getElementById('gen-btn');
+        const originalText = genBtn.innerText;
+        genBtn.disabled = true;
+        genBtn.innerText = 'กำลังสร้าง QR & Barcode...';
+
+        try {
+            // หา n8n base URL จาก current URL
+            let baseUrl = '';
+            const currentUrl = new URL(window.location.href);
+            const dataParam = currentUrl.searchParams.get('data');
+            
+            if (dataParam) {
+                try {
+                    const data = JSON.parse(decodeURIComponent(dataParam));
+                    if (data.n8nWebhookUrl) {
+                        baseUrl = data.n8nWebhookUrl.replace('/webhook/user-data', '');
+                    }
+                } catch (e) {
+                    console.log('Could not extract n8n URL from data');
+                }
+            }
+
+            // ถ้าไม่พบ URL ให้ใช้ default (แก้ไขตาม n8n instance ของคุณ)
+            if (!baseUrl) {
+                baseUrl = 'https://your-n8n-instance.com'; // แก้ไข URL ตรงนี้
+            }
+
+            const response = await fetch(`${baseUrl}/webhook/qr-barcode`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(qrdata)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // แสดง Thai QR Code
+                document.getElementById('qr-area').innerHTML = 
+                    '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:8px;">' +
+                    `${result.qr.companyName || qrdata.company}<br>${qrdata.name}` +
+                    '</div>' +
+                    '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:5px;">' +
+                    'Thai PromptPay QR (ประเทศไทย)' +
+                    '</div>' +
+                    `<img src="${result.qr.imgUrl}" width="200" height="200" style="display:block;margin:auto;border:2px solid #0073ea;">` +
+                    '<div style="text-align:center; font-weight:bold; color:#222; margin-top:8px;">จำนวนเงิน ' + 
+                    Number(qrdata.amount).toLocaleString() + ' บาท</div>' +
+                    '<div style="text-align:center; font-size:12px; color:#666; margin-top:5px;">สแกนด้วยแอปธนาคารไทย</div>';
+
+                // แสดง Thai Barcode
+                document.getElementById('barcode-area').innerHTML =
+                    '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:5px; margin-top:-10px;">' +
+                    'Thai Barcode สำหรับชำระเงิน' +
+                    '</div>' +
+                    `<img src="${result.barcode.barcodeImgUrl}" alt="barcode" style="display:block;margin:auto;max-width:100%;">` +
+                    '<div style="text-align:center;color:#666;font-size:11px;margin-top:5px;word-break:break-all;">' +
+                    result.barcode.barcodeString.replace(/\r/g, '[CR]') +
+                    '</div>' +
+                    '<div style="text-align:center;color:#999;font-size:10px;margin-top:3px;">' +
+                    `Tax ID: ${result.barcode.taxid} | Suffix: ${result.barcode.suffix}` +
+                    '</div>';
+
+                showMessage('สร้าง Thai QR และ Barcode สำเร็จ! ใช้ได้กับธนาคารไทย', 'success');
+                
+                // Log for debugging
+                console.log('QR String:', result.qr.qrString);
+                console.log('Barcode String:', result.barcode.barcodeString);
+                
+            } else {
+                throw new Error(result.error || 'Unknown error occurred');
+            }
+
+        } catch (error) {
+            console.error('Error generating QR/Barcode:', error);
+            showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
+            
+            // แสดง fallback QR ธรรมดา
+            const qrText = `Company: ${qrdata.company}, CV: ${qrdata.cv}, Name: ${qrdata.name}, Amount: ${qrdata.amount}`;
+            const fallbackQrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrText) + "&size=200x200";
+            
+            document.getElementById('qr-area').innerHTML = 
+                '<div style="text-align:center;font-weight:bold; color:#ff6b6b; margin-bottom:8px;">' +
+                'Fallback QR (ไม่ใช่ Thai PromptPay)' +
+                '</div>' +
+                `<img src="${fallbackQrUrl}" width="200" height="200" style="display:block;margin:auto;">` +
+                '<div style="text-align:center; color:#666; margin-top:8px;">QR Code ชั่วคราว</div>';
         
-        document.getElementById('barcode-area').innerHTML =
-            '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:2px; margin-top:-16px;">' +
-            'Barcode สำหรับชำระเงิน' +
-            '</div>' +
-            '<img src="' + barcodeUrl + '" alt="barcode" style="display:block;margin:auto;">' +
-            '<div style="text-align:center;color:#666;font-size:0.8em;margin-top:2px;">' +
-            barcodeText +
-            '</div>';
+        } finally {
+            // คืนค่าปุ่ม
+            genBtn.disabled = false;
+            genBtn.innerText = originalText;
+        }
     }
 
     function showDebugInfo(data) {
@@ -307,14 +407,15 @@
             Invoices: ${data?.invoices?.length || 0}<br>
             Companies: ${data?.companies?.length || 0}<br>
             CVs: ${data?.cvs?.length || 0}<br>
-            Names: ${data?.names?.length || 0}
+            Names: ${data?.names?.length || 0}<br>
+            N8N URL: ${data?.n8nWebhookUrl || 'Not found'}
         `;
         
         // แสดง debug info ชั่วคราว
         debugDiv.style.display = 'block';
         setTimeout(() => {
             debugDiv.style.display = 'none';
-        }, 5000);
+        }, 7000);
     }
 
     function initializeData(data) {
@@ -347,7 +448,7 @@
             const duedateStatusEl = document.getElementById('duedate-status');
             if (duedateStatusEl) duedateStatusEl.addEventListener('change', renderTable);
             const genBtnEl = document.getElementById('gen-btn');
-            if (genBtnEl) genBtnEl.addEventListener('click', generateQRBarcode);
+            if (genBtnEl) genBtnEl.addEventListener('click', generateThaiQRBarcode); // เปลี่ยนจาก generateQRBarcode
             const companyEl = document.getElementById('company');
             if (companyEl) companyEl.addEventListener('change', updateAccountDropdown);
             const cvEl = document.getElementById('cv');

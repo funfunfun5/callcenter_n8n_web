@@ -35,7 +35,7 @@
         .qr-img {margin-bottom:40px;}
         .barcode-img {margin-top:22px;margin-bottom:10px;}
         .debug-info {background: #f8f9fa;padding: 15px;border-radius: 8px;margin: 20px 0;font-family: monospace;font-size: 12px;border: 1px solid #dee2e6;}
-        .loading {display: none;text-align: center;padding: 40px;}
+        .loading {text-align: center;padding: 40px;}
         .loading-spinner {border: 4px solid #f3f3f3;border-top: 4px solid #0073ea;border-radius: 50%;width: 50px;height: 50px;animation: spin 1s linear infinite;margin: 0 auto 20px;}
         .error-message {background: #f8d7da;color: #721c24;padding: 15px;border-radius: 8px;margin: 20px 0;border: 1px solid #f5c6cb;}
         .success-message {background: #d4edda;color: #155724;padding: 15px;border-radius: 8px;margin: 20px 0;border: 1px solid #c3e6cb;}
@@ -127,7 +127,7 @@
 
 <script>
     let allInvoicesData;
-    let n8nBaseUrl = ''; // จะได้จาก URL parameter
+    let n8nBaseUrl = '';
 
     function populateDropdown(list, elementId) {
         const el = document.getElementById(elementId);
@@ -144,11 +144,6 @@
         return (d.getDate() + "/" + (d.getMonth()+1) + "/" + d.getFullYear());
     }
 
-    function todayStr() {
-        let t = new Date();
-        return t.toISOString().substr(0,10);
-    }
-
     function displayCurrentDate() {
         let t = new Date();
         const el = document.getElementById("current-date");
@@ -160,7 +155,6 @@
         const className = type === 'error' ? 'error-message' : 'success-message';
         messageArea.innerHTML = `<div class="${className}">${message}</div>`;
         
-        // Auto hide after 5 seconds
         setTimeout(() => {
             messageArea.innerHTML = '';
         }, 5000);
@@ -261,7 +255,7 @@
                     var amtStr = row.cells[5].innerText.replace(/,/g,"");
                     var amt = parseFloat(amtStr);
                     if (!isNaN(amt)) {
-                        total += amt;
+                        total += Math.abs(amt); // ใช้ Math.abs() เพื่อแปลงเป็นค่าบวก
                     }
                 }
             }
@@ -275,60 +269,32 @@
         const name = document.getElementById('account-label').innerText;
         const amount = document.getElementById('total-amount').innerText.replace(/,/g, '');
 
-        const data = {
+        return {
             company: company,
             cv: cv,
             name: name,
             amount: amount
         };
-
-        console.log('QR Data:', data);
-        return data;
     }
 
-    // ฟังก์ชันสำหรับเรียกใช้ n8n API เพื่อสร้าง Thai QR และ Barcode
+    // ฟังก์ชันเรียก Flow 2 สำหรับสร้าง Thai QR และ Barcode
     async function generateThaiQRBarcode() {
         const qrdata = getSelectedQRData();
         
-        // ตรวจสอบข้อมูล
         if (!qrdata.amount || parseFloat(qrdata.amount) <= 0) {
             showMessage('กรุณาเลือกรายการที่ต้องการชำระเงิน', 'error');
             return;
         }
 
-        // แสดง loading
         const genBtn = document.getElementById('gen-btn');
         const originalText = genBtn.innerText;
         genBtn.disabled = true;
         genBtn.innerText = 'กำลังสร้าง QR & Barcode...';
 
         try {
-            // หา n8n base URL จาก current URL
-            let baseUrl = '';
-            const currentUrl = new URL(window.location.href);
-            const dataParam = currentUrl.searchParams.get('data');
-            
-            if (dataParam) {
-                try {
-                    const data = JSON.parse(decodeURIComponent(dataParam));
-                    if (data.n8nWebhookUrl) {
-                        baseUrl = data.n8nWebhookUrl.replace('/webhook/user-data', '');
-                    }
-                } catch (e) {
-                    console.log('Could not extract n8n URL from data');
-                }
-            }
-
-            // ถ้าไม่พบ URL ให้ใช้ default (แก้ไขตาม n8n instance ของคุณ)
-            if (!baseUrl) {
-                baseUrl = 'https://your-n8n-instance.com'; // แก้ไข URL ตรงนี้
-            }
-
-            const response = await fetch(`${baseUrl}/webhook/qr-barcode`, {
+            const response = await fetch(`${n8nBaseUrl}/webhook/qr-barcode`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(qrdata)
             });
 
@@ -349,28 +315,19 @@
                     '</div>' +
                     `<img src="${result.qr.imgUrl}" width="200" height="200" style="display:block;margin:auto;border:2px solid #0073ea;">` +
                     '<div style="text-align:center; font-weight:bold; color:#222; margin-top:8px;">จำนวนเงิน ' + 
-                    Number(qrdata.amount).toLocaleString() + ' บาท</div>' +
-                    '<div style="text-align:center; font-size:12px; color:#666; margin-top:5px;">สแกนด้วยแอปธนาคารไทย</div>';
+                    Number(qrdata.amount).toLocaleString() + ' บาท</div>';
 
                 // แสดง Thai Barcode
                 document.getElementById('barcode-area').innerHTML =
-                    '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:5px; margin-top:-10px;">' +
+                    '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:5px;">' +
                     'Thai Barcode สำหรับชำระเงิน' +
                     '</div>' +
                     `<img src="${result.barcode.barcodeImgUrl}" alt="barcode" style="display:block;margin:auto;max-width:100%;">` +
                     '<div style="text-align:center;color:#666;font-size:11px;margin-top:5px;word-break:break-all;">' +
                     result.barcode.barcodeString.replace(/\r/g, '[CR]') +
-                    '</div>' +
-                    '<div style="text-align:center;color:#999;font-size:10px;margin-top:3px;">' +
-                    `Tax ID: ${result.barcode.taxid} | Suffix: ${result.barcode.suffix}` +
                     '</div>';
 
-                showMessage('สร้าง Thai QR และ Barcode สำเร็จ! ใช้ได้กับธนาคารไทย', 'success');
-                
-                // Log for debugging
-                console.log('QR String:', result.qr.qrString);
-                console.log('Barcode String:', result.barcode.barcodeString);
-                
+                showMessage('สร้าง Thai QR และ Barcode สำเร็จ!', 'success');
             } else {
                 throw new Error(result.error || 'Unknown error occurred');
             }
@@ -378,40 +335,54 @@
         } catch (error) {
             console.error('Error generating QR/Barcode:', error);
             showMessage(`เกิดข้อผิดพลาด: ${error.message}`, 'error');
-            
-            // แสดง fallback QR ธรรมดา
-            const qrText = `Company: ${qrdata.company}, CV: ${qrdata.cv}, Name: ${qrdata.name}, Amount: ${qrdata.amount}`;
-            const fallbackQrUrl = "https://api.qrserver.com/v1/create-qr-code/?data=" + encodeURIComponent(qrText) + "&size=200x200";
-            
-            document.getElementById('qr-area').innerHTML = 
-                '<div style="text-align:center;font-weight:bold; color:#ff6b6b; margin-bottom:8px;">' +
-                'Fallback QR (ไม่ใช่ Thai PromptPay)' +
-                '</div>' +
-                `<img src="${fallbackQrUrl}" width="200" height="200" style="display:block;margin:auto;">` +
-                '<div style="text-align:center; color:#666; margin-top:8px;">QR Code ชั่วคราว</div>';
-        
         } finally {
-            // คืนค่าปุ่ม
             genBtn.disabled = false;
             genBtn.innerText = originalText;
         }
     }
 
-    function showDebugInfo(data) {
+    // ฟังก์ชันเรียก Flow 3 เพื่อดึงข้อมูล
+    async function loadDataFromAPI(userId, n8nUrl) {
+        try {
+            console.log('Loading data from API:', n8nUrl + '/webhook/get-data');
+            
+            const response = await fetch(n8nUrl + '/webhook/get-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId: userId })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('API Response:', data);
+
+            if (data.success) {
+                return data;
+            } else {
+                throw new Error(data.error || 'API returned error');
+            }
+
+        } catch (error) {
+            console.error('Error loading data from API:', error);
+            throw error;
+        }
+    }
+
+    function showDebugInfo(userId, n8nUrl, dataCount = 0) {
         const debugDiv = document.getElementById('debugInfo');
         const debugContent = document.getElementById('debugContent');
         
         debugContent.innerHTML = `
             URL: ${window.location.href}<br>
-            Data found: ${data ? 'Yes' : 'No'}<br>
-            Invoices: ${data?.invoices?.length || 0}<br>
-            Companies: ${data?.companies?.length || 0}<br>
-            CVs: ${data?.cvs?.length || 0}<br>
-            Names: ${data?.names?.length || 0}<br>
-            N8N URL: ${data?.n8nWebhookUrl || 'Not found'}
+            User ID: ${userId || 'Not found'}<br>
+            N8N URL: ${n8nUrl || 'Not found'}<br>
+            Data Count: ${dataCount}<br>
+            API Endpoint: ${n8nUrl}/webhook/get-data
         `;
         
-        // แสดง debug info ชั่วคราว
         debugDiv.style.display = 'block';
         setTimeout(() => {
             debugDiv.style.display = 'none';
@@ -428,82 +399,67 @@
 
             updateAccountDropdown();
 
-            // ตั้งค่าวันที่เริ่มต้นและสิ้นสุด
+            // ตั้งค่าวันที่
             let validDates = allInvoicesData.invoices.filter(inv => inv.date && inv.date !== "1970-01-01");
             if (validDates.length > 0) {
                 let minDate = validDates.reduce((min, inv) => inv.date < min ? inv.date : min, validDates[0].date);
                 let maxDate = validDates.reduce((max, inv) => inv.date > max ? inv.date : max, validDates[0].date);
                 
-                const startDateEl = document.getElementById('start-date');
-                if (startDateEl) startDateEl.value = minDate;
-                const endDateEl = document.getElementById('end-date');
-                if (endDateEl) endDateEl.value = maxDate;
+                document.getElementById('start-date').value = minDate;
+                document.getElementById('end-date').value = maxDate;
             }
 
-            // Bind event listeners
-            const startDateEl = document.getElementById('start-date');
-            if (startDateEl) startDateEl.addEventListener('change', renderTable);
-            const endDateEl = document.getElementById('end-date');
-            if (endDateEl) endDateEl.addEventListener('change', renderTable);
-            const duedateStatusEl = document.getElementById('duedate-status');
-            if (duedateStatusEl) duedateStatusEl.addEventListener('change', renderTable);
-            const genBtnEl = document.getElementById('gen-btn');
-            if (genBtnEl) genBtnEl.addEventListener('click', generateThaiQRBarcode); // เปลี่ยนจาก generateQRBarcode
-            const companyEl = document.getElementById('company');
-            if (companyEl) companyEl.addEventListener('change', updateAccountDropdown);
-            const cvEl = document.getElementById('cv');
-            if (cvEl) cvEl.addEventListener('change', updateAccountDropdown);
+            // Event listeners
+            document.getElementById('start-date').addEventListener('change', renderTable);
+            document.getElementById('end-date').addEventListener('change', renderTable);
+            document.getElementById('duedate-status').addEventListener('change', renderTable);
+            document.getElementById('gen-btn').addEventListener('click', generateThaiQRBarcode);
+            document.getElementById('company').addEventListener('change', updateAccountDropdown);
+            document.getElementById('cv').addEventListener('change', updateAccountDropdown);
 
             displayCurrentDate();
             renderTable();
 
-            // แสดง main content และซ่อน loading
             document.getElementById('loadingDiv').style.display = 'none';
             document.getElementById('mainContent').style.display = 'block';
 
         } catch (e) {
             console.error("Error initializing data:", e);
             document.getElementById('loadingDiv').style.display = 'none';
-            document.body.innerHTML = "<h1>เกิดข้อผิดพลาดในการโหลดข้อมูล</h1><p>ไม่สามารถโหลดข้อมูลได้: " + e.message + "</p>";
+            document.body.innerHTML = "<h1>เกิดข้อผิดพลาดในการโหลดข้อมูล</h1><p>" + e.message + "</p>";
         }
     }
 
-    function loadDataFromURL() {
+    // โหลดข้อมูลจาก URL parameters และเรียก API
+    async function loadDataFromURL() {
         console.log('=== Loading data from URL ===');
-        console.log('Current URL:', window.location.href);
         
         const urlParams = new URLSearchParams(window.location.search);
-        const dataParam = urlParams.get('data');
+        const userId = urlParams.get('userId');
+        const n8nUrl = urlParams.get('n8nUrl');
         
-        console.log('Data parameter found:', dataParam ? 'Yes' : 'No');
+        console.log('userId:', userId);
+        console.log('n8nUrl:', n8nUrl);
         
-        if (dataParam) {
-            try {
-                const data = JSON.parse(decodeURIComponent(dataParam));
-                console.log('Parsed data:', data);
-                
-                showDebugInfo(data);
-                
-                if (data.invoices && Array.isArray(data.invoices)) {
-                    initializeData(data);
-                    return;
-                } else {
-                    console.error('No valid invoices array found in data');
-                }
-            } catch (e) {
-                console.error('Error parsing URL data:', e);
-                showDebugInfo(null);
-            }
-        } else {
-            console.log('No data parameter in URL');
+        if (!userId || !n8nUrl) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.body.innerHTML = "<div class='main-container'><h1>WEB APP</h1><p style='text-align:center;margin-top:50px;'>ไม่พบข้อมูล userId หรือ n8nUrl</p></div>";
+            return;
         }
-        
-        // แสดงข้อความไม่มีข้อมูล
-        document.getElementById('loadingDiv').style.display = 'none';
-        document.body.innerHTML = "<div class='main-container'><h1>WEB APP</h1><p style='text-align:center;margin-top:50px;'>ไม่พบข้อมูล กรุณาเข้าถึงผ่าน LINE Bot</p></div>";
+
+        n8nBaseUrl = n8nUrl;
+        showDebugInfo(userId, n8nUrl);
+
+        try {
+            const data = await loadDataFromAPI(userId, n8nUrl);
+            showDebugInfo(userId, n8nUrl, data.dataCount);
+            initializeData(data);
+        } catch (error) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.body.innerHTML = `<div class='main-container'><h1>เกิดข้อผิดพลาด</h1><p style='text-align:center;margin-top:50px;'>ไม่สามารถโหลดข้อมูลได้: ${error.message}</p></div>`;
+        }
     }
 
-    // โหลดข้อมูลเมื่อหน้าเว็บพร้อม
     window.addEventListener('load', () => {
         console.log('Page loaded');
         loadDataFromURL();

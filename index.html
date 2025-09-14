@@ -180,6 +180,21 @@
         if (!tbody || !allInvoicesData || !allInvoicesData.invoices || allInvoicesData.invoices.length === 0) {
             if (tbody) tbody.innerHTML = "<tr><td colspan='6'>ไม่มีข้อมูลที่ตรงกับเงื่อนไข</td></tr>";
             return;
+        let companyValue = document.getElementById('company').value;
+        let cvValue = document.getElementById('cv').value;
+        let accountValue = document.getElementById('account-label').innerText.trim();
+    
+    console.log('Filter criteria:');
+    console.log('companyValue:', companyValue);
+    console.log('cvValue:', cvValue);
+    console.log('accountValue:', accountValue);
+    
+    let filtered = allInvoicesData.invoices.filter(inv=>{
+        console.log('Checking invoice:', inv.company, inv.cv, inv.name);
+        // ... ส่วนที่เหลือ
+    });
+    
+    console.log('Filtered results:', filtered.length);
         }
 
         let start = document.getElementById('start-date').value;

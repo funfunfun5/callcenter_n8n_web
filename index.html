@@ -164,9 +164,16 @@
         const company = document.getElementById('company').value;
         const cv = document.getElementById('cv').value;
         
-        const invoice = allInvoicesData.invoices.find(inv =>
-            inv.company == company && inv.cv == cv
-        );
+    console.log('Looking for:', company, cv);
+    console.log('Available invoices:', allInvoicesData.invoices);
+
+
+    const invoice = allInvoicesData.invoices.find(inv => {
+        console.log('Checking:', inv.company, inv.cv, 'vs', company, cv);
+        return inv.company == company && inv.cv == cv;
+    });
+    
+    console.log('Found invoice:', invoice);
 
         let accountName = '-';
         if (invoice && invoice.name) accountName = invoice.name;

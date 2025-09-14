@@ -254,8 +254,10 @@
                 if (row && row.cells && row.cells.length > 5) {
                     var amtStr = row.cells[5].innerText.replace(/,/g,"");
                     var amt = parseFloat(amtStr);
+                    // if (!isNaN(amt)) {
+                    //     total += Math.abs(amt); // ใช้ Math.abs() เพื่อแปลงเป็นค่าบวก
                     if (!isNaN(amt)) {
-                        total += Math.abs(amt); // ใช้ Math.abs() เพื่อแปลงเป็นค่าบวก
+                        total += amt; // ลบ Math.abs() ออก
                     }
                 }
             }

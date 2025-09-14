@@ -232,7 +232,8 @@
             if (cvValue) cvOk = (inv.cv == cvValue);
             if (accountValue) accountOk = (inv.name == accountValue);
             
-            return dateOk && statusOk && companyOk && cvOk && accountOk;
+            // return dateOk && statusOk && companyOk && cvOk && accountOk;
+            return dateOk && statusOk && companyOk && cvOk; // ไม่เช็ค accountOk
         });
 
         let html = "";

@@ -236,19 +236,17 @@
             return dateOk && statusOk && companyOk && cvOk; // ไม่เช็ค accountOk
         });
 
-        let html = "";
-        filtered.forEach(inv => {
-            html += `<tr>
-                <td><input type="checkbox" class="check-item"></td>
-                <td>${formatDate(inv.date)}</td>
-                <td>${inv.docType || '-'}</td>
-                <td>${inv.number || '-'}</td>
-                <td>${formatDate(inv.due)}</td>
-                <td>${(inv.amount || 0).toLocaleString('th-TH', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2                   
-            </tr>`;
-        })};
+       html += `<tr>
+    <td><input type="checkbox" class="check-item"></td>
+    <td>${formatDate(inv.date)}</td>
+    <td>${inv.docType || '-'}</td>
+    <td>${inv.number || '-'}</td>
+    <td>${formatDate(inv.due)}</td>
+    <td>${(inv.amount || 0).toLocaleString('th-TH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}</td>
+</tr>`;
         
         tbody.innerHTML = html;
         bindCheckboxListeners();

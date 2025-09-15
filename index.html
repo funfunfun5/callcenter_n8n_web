@@ -395,23 +395,23 @@
             throw error;
         }
     }
-
+    //ซ่อน ShowDebug
     function showDebugInfo(userId, n8nUrl, dataCount = 0) {
-        const debugDiv = document.getElementById('debugInfo');
-        const debugContent = document.getElementById('debugContent');
+        // const debugDiv = document.getElementById('debugInfo');
+        // const debugContent = document.getElementById('debugContent');
         
-        debugContent.innerHTML = `
-            URL: ${window.location.href}<br>
-            User ID: ${userId || 'Not found'}<br>
-            N8N URL: ${n8nUrl || 'Not found'}<br>
-            Data Count: ${dataCount}<br>
-            API Endpoint: ${n8nUrl}/webhook/get-data
-        `;
+        // debugContent.innerHTML = `
+        //     URL: ${window.location.href}<br>
+        //     User ID: ${userId || 'Not found'}<br>
+        //     N8N URL: ${n8nUrl || 'Not found'}<br>
+        //     Data Count: ${dataCount}<br>
+        //     API Endpoint: ${n8nUrl}/webhook/get-data
+        // `;
         
-        debugDiv.style.display = 'block';
-        setTimeout(() => {
-            debugDiv.style.display = 'none';
-        }, 7000);
+        // debugDiv.style.display = 'block';
+        // setTimeout(() => {
+        //     debugDiv.style.display = 'none';
+        // }, 7000);
     }
 
     function initializeData(data) {

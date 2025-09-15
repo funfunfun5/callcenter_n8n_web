@@ -236,17 +236,17 @@
             return dateOk && statusOk && companyOk && cvOk; // ไม่เช็ค accountOk
         });
 
-       html += `<tr>
-    <td><input type="checkbox" class="check-item"></td>
-    <td>${formatDate(inv.date)}</td>
-    <td>${inv.docType || '-'}</td>
-    <td>${inv.number || '-'}</td>
-    <td>${formatDate(inv.due)}</td>
-    <td>${(inv.amount || 0).toLocaleString('th-TH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    })}</td>
-</tr>`;
+        let html = "";
+        filtered.forEach(inv => {
+            html += `<tr>
+                <td><input type="checkbox" class="check-item"></td>
+                <td>${formatDate(inv.date)}</td>
+                <td>${inv.docType || '-'}</td>
+                <td>${inv.number || '-'}</td>
+                <td>${formatDate(inv.due)}</td>
+                <td>${(inv.amount || 0).toLocaleString()}</td>
+            </tr>`;
+        });
         
         tbody.innerHTML = html;
         bindCheckboxListeners();
@@ -285,9 +285,6 @@
                 }
             }
         });
-        //แก้ปัญหาทศนิยม
-        total = Match.round(total*100)/100;
-        
         document.getElementById('total-amount').innerText = total.toLocaleString();
     }
 

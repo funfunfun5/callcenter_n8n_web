@@ -269,27 +269,26 @@
     }
 
     function calculateTotal() {
-        var items = document.querySelectorAll('.check-item');
-        var total = 0;
-        items.forEach(function(cb) {
-            if(cb.checked){
-                var row = cb.closest('tr');
-                if (row && row.cells && row.cells.length > 5) {
-                    var amtStr = row.cells[5].innerText.replace(/,/g,"");
-                    var amt = parseFloat(amtStr);
-                    // if (!isNaN(amt)) {
-                    //     total += Math.abs(amt); // ใช้ Math.abs() เพื่อแปลงเป็นค่าบวก
-                    if (!isNaN(amt)) {
-                        total += amt; // ลบ Math.abs() ออก
-                    }
+    var items = document.querySelectorAll('.check-item');
+    var total = 0;
+    items.forEach(function(cb) {
+        if(cb.checked){
+            var row = cb.closest('tr');
+            if (row && row.cells && row.cells.length > 5) {
+                var amtStr = row.cells[5].innerText.replace(/,/g,"");
+                var amt = parseFloat(amtStr);
+                if (!isNaN(amt)) {
+                    total += amt;
                 }
             }
-        });
-        / เพิ่มการ format ทศนิยม 2 ตำแหน่ง
+        }
+    });
+        // เพิ่มการ format ทศนิยม 2 ตำแหน่ง
         total = Math.round(total * 100) / 100;
         document.getElementById('total-amount').innerText = total.toLocaleString('th-TH', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+        });
     }
 
     function getSelectedQRData() {

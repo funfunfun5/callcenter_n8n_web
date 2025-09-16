@@ -285,7 +285,11 @@
                 }
             }
         });
-        document.getElementById('total-amount').innerText = total.toLocaleString();
+        / เพิ่มการ format ทศนิยม 2 ตำแหน่ง
+        total = Math.round(total * 100) / 100;
+        document.getElementById('total-amount').innerText = total.toLocaleString('th-TH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
     }
 
     function getSelectedQRData() {

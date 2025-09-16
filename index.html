@@ -463,9 +463,19 @@
         const userId = urlParams.get('userId');
         const n8nUrl = urlParams.get('n8nUrl');
         
+        const expires = urlParams.get('expires');
+        
+            // เช็ค Link หมดอายุ
+        if (expires && new Date().getTime() > parseInt(expires)) {
+            document.getElementById('loadingDiv').style.display = 'none';
+            document.body.innerHTML = "<div class='main-container'><h1 style='color:#dc3545;'>Link หมดอายุแล้ว</h1><p style='text-align:center;margin-top:50px;color:#6c757d;'>กรุณาขอ Link ใหม่จาก LINE Bot</p></div>";
+            return;
+        }
+
         console.log('userId:', userId);
         console.log('n8nUrl:', n8nUrl);
-        
+        console.log('Link expires:', expires ? new Date(parseInt(expires)) : 'No expiry');
+
         if (!userId || !n8nUrl) {
             document.getElementById('loadingDiv').style.display = 'none';
             document.body.innerHTML = "<div class='main-container'><h1>WEB APP</h1><p style='text-align:center;margin-top:50px;'>ไม่พบข้อมูล userId หรือ n8nUrl</p></div>";

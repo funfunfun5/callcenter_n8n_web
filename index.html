@@ -129,13 +129,33 @@
     let allInvoicesData;
     let n8nBaseUrl = '';
 
+    // function populateDropdown(list, elementId) {
+    //     const el = document.getElementById(elementId);
+    //     if (!el) return;
+    //     let uniqueList = Array.from(new Set(list));
+    //     el.innerHTML = uniqueList.filter(x => x && x.trim() !== '').map(x => `<option value="${x}">${x}</option>`).join('');
+    //     if (el.options.length > 0) el.value = el.options[0].value;
+    // }
     function populateDropdown(list, elementId) {
-        const el = document.getElementById(elementId);
-        if (!el) return;
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    
+    // ตรวจสอบว่าเป็น dropdown บริษัทหรือไม่
+    if (elementId === 'company' && list.length > 0 && typeof list[0] === 'object') {
+        // สำหรับ dropdown บริษัท - แสดงชื่อ แต่ value เป็นรหัส
+        el.innerHTML = list.map(item => 
+            `<option value="${item.code}">${item.name}</option>`
+        ).join('');
+    } else {
+        // สำหรับ dropdown อื่นๆ
         let uniqueList = Array.from(new Set(list));
-        el.innerHTML = uniqueList.filter(x => x && x.trim() !== '').map(x => `<option value="${x}">${x}</option>`).join('');
-        if (el.options.length > 0) el.value = el.options[0].value;
+        el.innerHTML = uniqueList.filter(x => x && x.trim() !== '').map(x => 
+            `<option value="${x}">${x}</option>`
+        ).join('');
     }
+    
+    if (el.options.length > 0) el.value = el.options[0].value;
+}
 
     function formatDate(dstr) {
         if (!dstr) return '-';
@@ -168,9 +188,13 @@
     console.log('Available invoices:', allInvoicesData.invoices);
 
 
+    // const invoice = allInvoicesData.invoices.find(inv => {
+    //     console.log('Checking:', inv.company, inv.cv, 'vs', company, cv);
+    //     return inv.company == company && inv.cv == cv;
+    // });
     const invoice = allInvoicesData.invoices.find(inv => {
-        console.log('Checking:', inv.company, inv.cv, 'vs', company, cv);
-        return inv.company == company && inv.cv == cv;
+    // company จาก dropdown คือรหัส (เช่น 333)
+    return inv.company == company && inv.cv == cv;
     });
     
     console.log('Found invoice:', invoice);
@@ -288,14 +312,29 @@
     document.getElementById('total-amount').innerText = total.toLocaleString();
 }
 
+    // function getSelectedQRData() {
+    //     const company = document.getElementById('company').value;
+    //     const cv = document.getElementById('cv').value;
+    //     const name = document.getElementById('account-label').innerText;
+    //     const amount = document.getElementById('total-amount').innerText.replace(/,/g, '');
+
+    //     return {
+    //         company: company,
+    //         cv: cv,
+    //         name: name,
+    //         amount: amount
+    //     };
+    // }
     function getSelectedQRData() {
-        const company = document.getElementById('company').value;
+        const companyCode = document.getElementById('company').value; // ได้รหัส 333
+        const companyName = document.getElementById('company').selectedOptions[0].text; // ได้ชื่อภาษาไทย
         const cv = document.getElementById('cv').value;
         const name = document.getElementById('account-label').innerText;
         const amount = document.getElementById('total-amount').innerText.replace(/,/g, '');
-
+    
         return {
-            company: company,
+            company: companyCode,        // ส่งรหัส 333 ไป generate
+            companyName: companyName,    // เก็บชื่อไว้ใช้แสดงผล
             cv: cv,
             name: name,
             amount: amount
@@ -331,9 +370,14 @@
 
             if (result.success) {
                 // แสดง Thai QR Code
+                
+                // document.getElementById('qr-area').innerHTML = 
+                //     '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:8px;">' +
+                //     `${result.qr.companyName || qrdata.company}<br>${qrdata.name}` +
+                //     '</div>' +
                 document.getElementById('qr-area').innerHTML = 
                     '<div style="text-align:center;font-weight:bold; color:#0073ea; margin-bottom:8px;">' +
-                    `${result.qr.companyName || qrdata.company}<br>${qrdata.name}` +
+                    `${qrdata.companyName || result.qr.companyName}<br>${qrdata.name}` +
                     '</div>' +
                     '<div style="text-align:center;font-weight:600;color:#0073ea;margin-bottom:5px;">' +
                     'Thai PromptPay QR (ประเทศไทย)' +
